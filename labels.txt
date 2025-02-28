@@ -1,0 +1,10 @@
+# Example labels file for arp-scan
+# Format: MAC_ADDRESS=LABEL
+# MAC addresses can be in any case, they will be converted to uppercase internally
+# Lines starting with # are ignored
+
+40:0D:10:88:92:90=Router
+00:12:41:89:3F:4C=NAS
+AC:CB:51:36:87:BE=Smart TV
+C0:99:C3:EC:42:E3=Desktop PC
+E8:48:B8:96:20:8B=Laptop 

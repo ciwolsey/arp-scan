@@ -110,6 +110,38 @@ Verbose mode additionally shows:
 - Real-time host discovery
 - Scan progress information
 
+## Label Lookup
+
+The scanner supports mapping MAC addresses to custom labels using a `labels.txt` file. When enabled with the `-l` or `--lookup` option, the scanner will read MAC address to label mappings and include them in the output.
+
+### Label File Format
+
+Create a file named `labels.txt` in the same directory as the scanner with entries in the following format:
+```
+MAC_ADDRESS=LABEL
+```
+
+Example `labels.txt`:
+```
+40:0D:10:88:92:90=Router
+00:12:41:89:3F:4C=NAS
+```
+
+### Output with Labels
+
+When label lookup is enabled, the output format becomes:
+```
+IP_ADDRESS MAC_ADDRESS LABEL
+```
+
+Example:
+```
+192.168.0.1 40:0D:10:88:92:90 Router
+192.168.0.2 00:12:41:89:3F:4C NAS
+```
+
+Note: MAC addresses in the labels file are case-insensitive.
+
 ## Performance
 
 - Default mode: 2-second scan duration with 10ms packet timeout

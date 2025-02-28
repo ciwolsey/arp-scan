@@ -4,6 +4,9 @@ use std::thread;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::env;
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
 use pnet::datalink::{self, NetworkInterface, Config};
 use pnet::packet::ethernet::{EtherTypes, EthernetPacket, MutableEthernetPacket};
 use pnet::packet::arp::{ArpHardwareTypes, ArpOperations, ArpPacket, MutableArpPacket};
@@ -15,11 +18,13 @@ use std::str::FromStr;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 type DiscoveredHosts = Arc<Mutex<HashMap<Ipv4Addr, MacAddr>>>;
+type Labels = HashMap<String, String>;
 
 struct ScanOptions {
     verbose: bool,
     fast_mode: bool,
     custom_range: Option<IpNetwork>,
+    lookup_labels: bool,
 }
 
 struct ArpScanner {
@@ -27,6 +32,7 @@ struct ArpScanner {
     local_ip: IpAddr,
     discovered_hosts: DiscoveredHosts,
     options: ScanOptions,
+    labels: Option<Labels>,
 }
 
 impl ArpScanner {
@@ -44,12 +50,38 @@ impl ArpScanner {
             println!("Using interface: {}", interface.name);
         }
 
+        let labels = if options.lookup_labels {
+            Some(Self::load_labels()?)
+        } else {
+            None
+        };
+
         Ok(Self {
             interface,
             local_ip,
             discovered_hosts: Arc::new(Mutex::new(HashMap::new())),
             options,
+            labels,
         })
+    }
+
+    fn load_labels() -> Result<Labels> {
+        let mut labels = HashMap::new();
+        let path = Path::new("labels.txt");
+        
+        if !path.exists() {
+            return Ok(labels);
+        }
+
+        let file = File::open(path)?;
+        for line in io::BufReader::new(file).lines() {
+            let line = line?;
+            if let Some((mac, label)) = line.split_once('=') {
+                labels.insert(mac.trim().to_uppercase(), label.trim().to_string());
+            }
+        }
+
+        Ok(labels)
     }
 
     fn find_interface(local_ip: &IpAddr) -> Result<NetworkInterface> {
@@ -212,7 +244,15 @@ impl ArpScanner {
         hosts.sort_by_key(|&(ip, _)| ip.octets());
         
         for (ip, mac) in hosts {
-            println!("{} {}", ip, mac.to_string().to_uppercase());
+            let mac_str = mac.to_string().to_uppercase();
+            if let Some(labels) = &self.labels {
+                if let Some(label) = labels.get(&mac_str) {
+                    println!("{}\t{}\t{}", ip, mac_str, label);
+                    continue;
+                }
+            }
+            // If no label or labels not enabled, print without label
+            println!("{}\t{}", ip, mac_str);
         }
     }
 }
@@ -227,21 +267,30 @@ fn print_usage() {
     println!("  -v, --verbose     Print detailed progress information");
     println!("  -f, --fast        Use shorter timeouts for quick-responding networks");
     println!("  -r, --range <IP>  Scan custom IP range (e.g., 192.168.0.0/24)");
+    println!("  -l, --lookup      Look up labels from labels.txt file");
     println!("  -h, --help        Display this help message\n");
     println!("Output Format:");
-    println!("  Default: IP_ADDRESS MAC_ADDRESS");
-    println!("  Verbose: Additional progress information and real-time host discovery\n");
+    println!("  Default:");
+    println!("    192.168.0.1\t40:0D:10:88:92:90");
+    println!("  With labels:");
+    println!("    192.168.0.1\t40:0D:10:88:92:90\tRouter");
+    println!("    192.168.0.2\t00:12:41:89:3F:4C\tNAS\n");
     println!("Examples:");
     println!("  arp-scan                          Perform a basic network scan");
     println!("  arp-scan -v                       Perform a scan with detailed progress information");
     println!("  arp-scan -f                       Perform a faster scan with shorter timeouts");
-    println!("  arp-scan -r 192.168.1.0/24       Scan a specific network range\n");
+    println!("  arp-scan -r 192.168.1.0/24       Scan a specific network range");
+    println!("  arp-scan -l                       Include labels from labels.txt\n");
+    println!("Label File Format (labels.txt):");
+    println!("  MAC_ADDRESS=LABEL");
+    println!("  Example: 40:0D:10:88:92:90=Router\n");
     println!("Notes:");
     println!("  - Requires administrator/root privileges");
     println!("  - Automatically detects and uses the primary network interface");
     println!("  - MAC addresses are displayed in uppercase");
     println!("  - Fast mode (-f) reduces scan time but may miss slower hosts");
     println!("  - Custom range option overrides auto-detected network range");
+    println!("  - Labels file (labels.txt) is optional");
 }
 
 fn main() -> Result<()> {
@@ -259,6 +308,7 @@ fn main() -> Result<()> {
         verbose: args.iter().any(|arg| arg == "-v" || arg == "--verbose"),
         fast_mode: args.iter().any(|arg| arg == "-f" || arg == "--fast"),
         custom_range,
+        lookup_labels: args.iter().any(|arg| arg == "-l" || arg == "--lookup"),
     };
 
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
