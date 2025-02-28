@@ -192,6 +192,15 @@ impl ArpScanner {
         let listening_thread = self.start_listener(rx);
 
         if let IpAddr::V4(local_ip) = self.local_ip {
+            // Add local machine to discovered hosts
+            if let Some(local_mac) = self.interface.mac {
+                let mut hosts = self.discovered_hosts.lock().unwrap();
+                hosts.insert(local_ip, local_mac);
+                if self.options.verbose {
+                    println!("Local machine: {} (MAC: {})", local_ip, local_mac.to_string().to_uppercase());
+                }
+            }
+
             let network = if let Some(custom_range) = &self.options.custom_range {
                 if self.options.verbose {
                     println!("Using custom network range: {}", custom_range);
@@ -218,7 +227,6 @@ impl ArpScanner {
                 }
 
                 let mut packets: Vec<_> = network.iter()
-                    .filter(|&ip| ip != local_ip)  // Still avoid scanning our own IP
                     .map(|ip| self.create_arp_request(ip))
                     .collect::<Result<Vec<_>>>()?;
 

@@ -88,14 +88,12 @@ sudo arp-scan -r 192.168.1.0/24
 # Combine options
 sudo arp-scan -v -f -r 192.168.0.0/24
 ```
-
 Note: On Windows, run from an Administrator command prompt without `sudo`.
 
 ## Output Format
 
 Default output format:
-```
-IP_ADDRESS MAC_ADDRESS
+```IP_ADDRESS MAC_ADDRESS
 ```
 
 Example:
@@ -133,7 +131,6 @@ When label lookup is enabled, the output format becomes:
 ```
 IP_ADDRESS MAC_ADDRESS LABEL
 ```
-
 Example:
 ```
 192.168.0.1 40:0D:10:88:92:90 Router
@@ -156,3 +153,5 @@ Note: MAC addresses in the labels file are case-insensitive.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+
