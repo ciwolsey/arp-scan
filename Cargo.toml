@@ -1,0 +1,17 @@
+[package]
+name = "arp-scan"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A fast ARP network scanner"
+
+[dependencies]
+pnet = "0.34.0"
+ipnetwork = "0.20.0"
+local-ip-address = "0.5.7"
+
+[build-dependencies]
+pkg-config = "0.3.30"
+
+[target.'cfg(windows)'.build-dependencies]
+vcpkg = "0.2.15"
