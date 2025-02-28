@@ -56,7 +56,7 @@ Note: You only need ONE of the above options to work. If one method fails, try a
 
 1. Clone the repository:
 ```bash
-git clone [your-repository-url]
+git clone https://github.com/ciwolsey/arp-scan
 cd arp-scan
 ```
 
