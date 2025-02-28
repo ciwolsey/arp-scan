@@ -9,10 +9,14 @@ A fast and efficient ARP network scanner written in Rust. This tool discovers ac
 
 ## Prerequisites
 
-- Rust toolchain (rustc, cargo) - [Install from rustup.rs](https://rustup.rs)
+- Rust toolchain (rustc, cargo) - [Install from rustup.rs](https://rustup.rs) (for building only)
 - Administrator/root privileges (required for raw socket operations)
+- Platform's packet capture library must be installed:
+  - Windows: Npcap runtime
+  - Linux: libpcap
+  - macOS: libpcap (pre-installed)
 
-### Platform-Specific Requirements
+### Platform-Specific Build Requirements
 
 #### Windows
 - [Npcap](https://npcap.com/) with SDK is required. Choose ONE of these installation methods:
@@ -92,14 +96,15 @@ Note: On Windows, run from an Administrator command prompt without `sudo`.
 
 ## Output Format
 
-Default output format:
-```IP_ADDRESS MAC_ADDRESS
+Default output format (tab-separated):
+```
+IP_ADDRESS    MAC_ADDRESS
 ```
 
 Example:
 ```
-192.168.0.1 40:0D:10:88:92:90
-192.168.0.2 00:12:41:89:3F:4C
+192.168.0.1   40:0D:10:88:92:90
+192.168.0.2   00:12:41:89:3F:4C
 ```
 
 Verbose mode additionally shows:
@@ -110,7 +115,7 @@ Verbose mode additionally shows:
 
 ## Label Lookup
 
-The scanner supports mapping MAC addresses to custom labels using a `labels.txt` file. When enabled with the `-l` or `--lookup` option, the scanner will read MAC address to label mappings and include them in the output.
+The scanner supports mapping MAC addresses to custom labels using a `labels.txt` file. When enabled with the `-l` or `--lookup` option, the scanner will read MAC address to label mappings and include them in the output. If the file doesn't exist, the scanner will continue running with the default output format.
 
 ### Label File Format
 
@@ -127,14 +132,15 @@ Example `labels.txt`:
 
 ### Output with Labels
 
-When label lookup is enabled, the output format becomes:
+When label lookup is enabled, the output format becomes (tab-separated):
 ```
-IP_ADDRESS MAC_ADDRESS LABEL
+IP_ADDRESS    MAC_ADDRESS             LABEL
 ```
+
 Example:
 ```
-192.168.0.1 40:0D:10:88:92:90 Router
-192.168.0.2 00:12:41:89:3F:4C NAS
+192.168.0.1   40:0D:10:88:92:90      Router
+192.168.0.2   00:12:41:89:3F:4C      NAS
 ```
 
 Note: MAC addresses in the labels file are case-insensitive.
