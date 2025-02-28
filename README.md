@@ -6,10 +6,6 @@ A fast and efficient ARP network scanner written in Rust. This tool discovers ac
 
 - Fast network host discovery using ARP requests
 - Automatic network interface detection
-- Custom network range scanning
-- Fast mode for quick-responding networks
-- Verbose output option
-- Display of IPv4 addresses and MAC addresses of discovered hosts
 
 ## Prerequisites
 
@@ -39,8 +35,6 @@ A fast and efficient ARP network scanner written in Rust. This tool discovers ac
     - `C:/Program Files/NPcapSDK/Lib/x64`
     - `C:/Program Files (x86)/Npcap/SDK/Lib/x64`
     - (see build.rs for all supported paths)
-
-Note: You only need ONE of the above options to work. If one method fails, try another.
 
 #### Linux
 - libpcap development files:
@@ -120,13 +114,10 @@ Verbose mode additionally shows:
 
 - Default mode: 2-second scan duration with 10ms packet timeout
 - Fast mode: 0.5-second scan duration with 5ms packet timeout
-- Sends ARP requests in batches of 32 packets
-- Automatically adjusts for network conditions
 
 ## Notes
 
 - Requires administrator/root privileges due to raw socket operations
-- MAC addresses are displayed in uppercase
 - Fast mode may miss slower responding hosts
 - Custom range option overrides auto-detected network range
 
