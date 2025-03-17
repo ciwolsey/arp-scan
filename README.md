@@ -1,6 +1,6 @@
 # arp-scan
 
-A fast and efficient ARP network scanner written in Rust. This tool scans your local network to discover active hosts and their MAC addresses.
+A fast and efficient ARP network scanner written in Rust, primarily designed for Windows. This tool scans your local network to discover active hosts and their MAC addresses, with special features for Windows hosts file management.
 
 ## Features
 
@@ -10,7 +10,7 @@ A fast and efficient ARP network scanner written in Rust. This tool scans your l
 - Support for custom IP ranges
 - Fast mode for quick-responding networks
 - Label support for host identification
-- Windows hosts file integration
+- Windows hosts file integration (Windows only)
 - Verbose output option
 
 ## Installation
@@ -31,13 +31,18 @@ cargo build --release
 # Windows (Run PowerShell as Administrator)
 .\target\release\arp-scan.exe
 
-# Linux/macOS
+# Linux/macOS (basic scanning only)
 sudo ./target/release/arp-scan
 ```
 
+## Platform Support
+
+- **Windows**: Full feature support including hosts file integration
+- **Linux/macOS**: Basic scanning functionality only (no hosts file integration)
+
 ## Usage
 
-Basic scan:
+Basic scan (all platforms):
 ```bash
 arp-scan
 ```
@@ -62,12 +67,12 @@ With labels:
 arp-scan --lookup
 ```
 
-Update Windows hosts file:
+Update Windows hosts file (Windows only):
 ```bash
 arp-scan --lookup --add-hosts
 ```
 
-Preview hosts file changes:
+Preview hosts file changes (Windows only):
 ```bash
 arp-scan --lookup --add-hosts --dummy
 ```
@@ -97,7 +102,7 @@ When labels are not enabled or a host has no label:
 
 ## Label Support
 
-Create a `labels.txt` file in the same directory as the executable with the following format:
+Create a `mappings.txt` file in the same directory as the executable with the following format:
 ```
 MAC_ADDRESS=LABEL=HOSTNAME
 ```
@@ -113,13 +118,13 @@ The HOSTNAME field is optional. If omitted, the entry will be:
 40:0D:10:88:92:90=Router=
 ```
 
-## Windows Hosts File Integration
+## Windows Hosts File Integration (Windows Only)
 
-The `--add-hosts` feature allows you to automatically update your Windows hosts file (`C:\Windows\System32\drivers\etc\hosts`) with entries from your `labels.txt` file. Here's how it works:
+The `--add-hosts` feature allows you to automatically update your Windows hosts file (`C:\Windows\System32\drivers\etc\hosts`) with entries from your `mappings.txt` file. This feature is only available on Windows.
 
 1. When you run `arp-scan --lookup --add-hosts`:
    - The tool scans your network for active hosts
-   - For each discovered host, it checks if its MAC address exists in `labels.txt`
+   - For each discovered host, it checks if its MAC address exists in `mappings.txt`
    - If a match is found and the entry has a hostname, it adds or updates an entry in the hosts file
    - The entries are sorted by IP address and properly formatted with aligned columns
 
@@ -130,10 +135,10 @@ The `--add-hosts` feature allows you to automatically update your Windows hosts 
    ```
    - IP addresses are left-aligned and padded for readability
    - Two tabs separate the IP from the hostname
-   - Only entries with hostnames in `labels.txt` are added
+   - Only entries with hostnames in `mappings.txt` are added
 
 3. The tool preserves existing entries in the hosts file that are not managed by arp-scan
-   - Only entries matching IPs or hostnames from `labels.txt` are updated
+   - Only entries matching IPs or hostnames from `mappings.txt` are updated
    - Other entries (like localhost, custom entries, etc.) remain unchanged
 
 4. Use the `--dummy` option to preview changes without modifying the hosts file:
@@ -142,13 +147,13 @@ The `--add-hosts` feature allows you to automatically update your Windows hosts 
    ```
    This will show you exactly what entries would be added or updated.
 
-Note: The `--add-hosts` option requires the `--lookup` option to be enabled, as it relies on the hostnames defined in your `labels.txt` file.
+Note: The `--add-hosts` option requires the `--lookup` option to be enabled, as it relies on the hostnames defined in your `mappings.txt` file.
 
 ## Requirements
 
 - Rust 1.70 or later
 - Administrator/root privileges
-- Windows (for hosts file integration) or Linux/macOS
+- Windows (for hosts file integration) or Linux/macOS (for basic scanning)
 
 ## License
 

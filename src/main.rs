@@ -235,17 +235,35 @@ impl ArpScanner {
     }
 
     fn update_hosts_file(&self) -> Result<()> {
-        let hosts_path = Path::new(r"C:\Windows\System32\drivers\etc\hosts");
-        if !hosts_path.exists() && !self.options.dummy_mode {
-            return Err("Windows hosts file not found".into());
+        // Check if running on Windows
+        if !cfg!(windows) {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "The --add-hosts option is only supported on Windows"
+            )));
         }
 
-        // Read existing hosts file
-        let hosts_content = if self.options.dummy_mode {
-            String::new()
-        } else {
-            std::fs::read_to_string(hosts_path)?
-        };
+        let hosts_path = Path::new("C:\\Windows\\System32\\drivers\\etc\\hosts");
+        if !hosts_path.exists() {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Windows hosts file not found. Please ensure you're running on Windows."
+            )));
+        }
+
+        // Read existing entries
+        let file_content = std::fs::read_to_string(hosts_path)?;
+        let mut entries: Vec<(Ipv4Addr, String)> = Vec::new();
+        let mut existing_ips = std::collections::HashSet::new();
+        let mut existing_hostnames = std::collections::HashSet::new();
+        
+        for line in file_content.lines() {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                existing_ips.insert(parts[0].parse::<Ipv4Addr>().unwrap());
+                existing_hostnames.insert(parts[1]);
+            }
+        }
 
         // Prepare new entries and updates
         let mut new_entries = String::new();
@@ -267,7 +285,7 @@ impl ArpScanner {
         }
 
         // Remove all existing entries that match our managed IPs or hostnames
-        let mut lines: Vec<&str> = hosts_content.lines().collect();
+        let mut lines: Vec<&str> = file_content.lines().collect();
         lines.retain(|line| {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
