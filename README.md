@@ -6,6 +6,12 @@ A fast and efficient ARP network scanner written in Rust. This tool discovers ac
 
 - Fast network host discovery using ARP requests
 - Automatic network interface detection
+- MAC address resolution
+- Support for custom IP ranges
+- Fast mode for quick-responding networks
+- Label support for host identification
+- Windows hosts file integration
+- Verbose output option
 
 ## Prerequisites
 
@@ -65,34 +71,51 @@ cargo build --release
 
 The compiled binary will be available at `target/release/arp-scan`
 
+3. Run with administrator privileges:
+```bash
+# Windows (Run PowerShell as Administrator)
+.\target\release\arp-scan.exe
+
+# Linux/macOS
+sudo ./target/release/arp-scan
+```
+
 ## Usage
 
-Basic scan (automatically detects network):
+Basic scan:
 ```bash
 sudo arp-scan
 ```
 
-Options:
-- `-v, --verbose`: Print detailed progress information
-- `-f, --fast`: Use shorter timeouts for quick-responding networks
-- `-r, --range <IP>`: Scan custom IP range (e.g., 192.168.0.0/24)
-- `-h, --help`: Display help message
-
-Examples:
+With verbose output:
 ```bash
-# Scan with verbose output
 sudo arp-scan -v
-
-# Fast scan with shorter timeouts
-sudo arp-scan -f
-
-# Scan specific network range
-sudo arp-scan -r 192.168.1.0/24
-
-# Combine options
-sudo arp-scan -v -f -r 192.168.0.0/24
 ```
-Note: On Windows, run from an Administrator command prompt without `sudo`.
+
+Fast mode:
+```bash
+sudo arp-scan -f
+```
+
+Custom IP range:
+```bash
+sudo arp-scan -r 192.168.1.0/24
+```
+
+With labels:
+```bash
+sudo arp-scan -l
+```
+
+Update Windows hosts file:
+```bash
+sudo arp-scan -l --add-hosts
+```
+
+Preview hosts file changes:
+```bash
+sudo arp-scan -l --add-hosts --dummy
+```
 
 ## Output Format
 
@@ -121,13 +144,18 @@ The scanner supports mapping MAC addresses to custom labels using a `labels.txt`
 
 Create a file named `labels.txt` in the same directory as the scanner with entries in the following format:
 ```
-MAC_ADDRESS=LABEL
+MAC_ADDRESS=LABEL=HOSTNAME
 ```
 
-Example `labels.txt`:
+Example:
 ```
-40:0D:10:88:92:90=Router
-00:12:41:89:3F:4C=NAS
+40:0D:10:88:92:90=Router=router.local
+00:12:41:89:3F:4C=NAS=nas.local
+```
+
+The HOSTNAME field is optional. If omitted, the entry will be:
+```
+40:0D:10:88:92:90=Router=
 ```
 
 ### Output with Labels
@@ -144,6 +172,37 @@ Example:
 ```
 
 Note: MAC addresses in the labels file are case-insensitive.
+
+## Windows Hosts File Integration
+
+The `--add-hosts` feature allows you to automatically update your Windows hosts file (`C:\Windows\System32\drivers\etc\hosts`) with entries from your `labels.txt` file. Here's how it works:
+
+1. When you run `sudo arp-scan -l --add-hosts`:
+   - The tool scans your network for active hosts
+   - For each discovered host, it checks if its MAC address exists in `labels.txt`
+   - If a match is found and the entry has a hostname, it adds or updates an entry in the hosts file
+   - The entries are sorted by IP address and properly formatted with aligned columns
+
+2. The hosts file entries are formatted as:
+   ```
+   192.168.0.1		router.local
+   192.168.0.10		nas.local
+   ```
+   - IP addresses are left-aligned and padded for readability
+   - Two tabs separate the IP from the hostname
+   - Only entries with hostnames in `labels.txt` are added
+
+3. The tool preserves existing entries in the hosts file that are not managed by arp-scan
+   - Only entries matching IPs or hostnames from `labels.txt` are updated
+   - Other entries (like localhost, custom entries, etc.) remain unchanged
+
+4. Use the `--dummy` option to preview changes without modifying the hosts file:
+   ```bash
+   sudo arp-scan -l --add-hosts --dummy
+   ```
+   This will show you exactly what entries would be added or updated.
+
+Note: The `--add-hosts` option requires the `-l` or `--lookup` option to be enabled, as it relies on the hostnames defined in your `labels.txt` file.
 
 ## Performance
 
