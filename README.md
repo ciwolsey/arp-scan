@@ -1,10 +1,10 @@
-# ARP Scanner
+# arp-scan
 
-A fast and efficient ARP network scanner written in Rust. This tool discovers active hosts on a local network by sending ARP requests and listening for responses.
+A fast and efficient ARP network scanner written in Rust. This tool scans your local network to discover active hosts and their MAC addresses.
 
 ## Features
 
-- Fast network host discovery using ARP requests
+- Fast network scanning using ARP requests
 - Automatic network interface detection
 - MAC address resolution
 - Support for custom IP ranges
@@ -13,54 +13,11 @@ A fast and efficient ARP network scanner written in Rust. This tool discovers ac
 - Windows hosts file integration
 - Verbose output option
 
-## Prerequisites
-
-- Rust toolchain (rustc, cargo) - [Install from rustup.rs](https://rustup.rs) (for building only)
-- Administrator/root privileges (required for raw socket operations)
-- Platform's packet capture library must be installed:
-  - Windows: Npcap runtime
-  - Linux: libpcap
-  - macOS: libpcap (pre-installed)
-
-### Platform-Specific Build Requirements
-
-#### Windows
-- [Npcap](https://npcap.com/) with SDK is required. Choose ONE of these installation methods:
-
-  **Option 1 (Recommended):**
-  - Install Npcap with the "Install Npcap SDK" option selected during installation
-  
-  **Option 2:**
-  - Install Npcap (without SDK)
-  - Set `NPCAP_SDK_DIR` environment variable to point to your SDK location
-  
-  **Option 3:**
-  - Install Npcap (without SDK)
-  - Install using [vcpkg](https://vcpkg.io/): `vcpkg install npcap:x64-windows`
-  
-  **Option 4:**
-  - Install Npcap (without SDK)
-  - Manually download and install the SDK to one of these locations:
-    - `C:/Program Files/Npcap/SDK/Lib/x64`
-    - `C:/Program Files/NPcapSDK/Lib/x64`
-    - `C:/Program Files (x86)/Npcap/SDK/Lib/x64`
-    - (see build.rs for all supported paths)
-
-#### Linux
-- libpcap development files:
-  - Debian/Ubuntu: `sudo apt-get install libpcap-dev`
-  - Fedora: `sudo dnf install libpcap-devel`
-  - Arch Linux: `sudo pacman -S libpcap`
-
-#### macOS
-- libpcap:
-  - Using Homebrew: `brew install libpcap`
-
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/ciwolsey/arp-scan
+git clone https://github.com/yourusername/arp-scan.git
 cd arp-scan
 ```
 
@@ -68,8 +25,6 @@ cd arp-scan
 ```bash
 cargo build --release
 ```
-
-The compiled binary will be available at `target/release/arp-scan`
 
 3. Run with administrator privileges:
 ```bash
@@ -84,65 +39,65 @@ sudo ./target/release/arp-scan
 
 Basic scan:
 ```bash
-sudo arp-scan
+arp-scan
 ```
 
 With verbose output:
 ```bash
-sudo arp-scan -v
+arp-scan --verbose
 ```
 
 Fast mode:
 ```bash
-sudo arp-scan -f
+arp-scan --fast
 ```
 
 Custom IP range:
 ```bash
-sudo arp-scan -r 192.168.1.0/24
+arp-scan --range 192.168.1.0/24
 ```
 
 With labels:
 ```bash
-sudo arp-scan -l
+arp-scan --lookup
 ```
 
 Update Windows hosts file:
 ```bash
-sudo arp-scan -l --add-hosts
+arp-scan --lookup --add-hosts
 ```
 
 Preview hosts file changes:
 ```bash
-sudo arp-scan -l --add-hosts --dummy
+arp-scan --lookup --add-hosts --dummy
 ```
 
 ## Output Format
 
-Default output format (tab-separated):
+The scanner outputs results in a tab-separated format with the following columns:
+
+1. IP Address
+2. MAC Address
+3. Hostname (if available)
+4. Label (if available)
+
+Example output:
 ```
-IP_ADDRESS    MAC_ADDRESS
+192.168.0.1         40:0D:10:88:92:90    router.local      Router
+192.168.0.10        00:12:41:89:3F:4C    nas.local        NAS
+192.168.0.100       00:1B:44:11:3A:B7    printer.local    Printer
+192.168.0.101       00:1B:44:11:3A:B8    server.local     Server
 ```
 
-Example:
+When labels are not enabled or a host has no label:
 ```
-192.168.0.1   40:0D:10:88:92:90
-192.168.0.2   00:12:41:89:3F:4C
+192.168.0.1         40:0D:10:88:92:90
+192.168.0.10        00:12:41:89:3F:4C
 ```
 
-Verbose mode additionally shows:
-- Local IP address
-- Network interface being used
-- Real-time host discovery
-- Scan progress information
+## Label Support
 
-## Label Lookup
-
-The scanner supports mapping MAC addresses to custom labels using a `labels.txt` file. When enabled with the `-l` or `--lookup` option, the scanner will read MAC address to label mappings and include them in the output. If the file doesn't exist, the scanner will continue running with the default output format.
-
-### Label File Format
-
-Create a file named `labels.txt` in the same directory as the scanner with entries in the following format:
+Create a `labels.txt` file in the same directory as the executable with the following format:
 ```
 MAC_ADDRESS=LABEL=HOSTNAME
 ```
@@ -158,26 +113,11 @@ The HOSTNAME field is optional. If omitted, the entry will be:
 40:0D:10:88:92:90=Router=
 ```
 
-### Output with Labels
-
-When label lookup is enabled, the output format becomes (tab-separated):
-```
-IP_ADDRESS    MAC_ADDRESS             LABEL
-```
-
-Example:
-```
-192.168.0.1   40:0D:10:88:92:90      Router
-192.168.0.2   00:12:41:89:3F:4C      NAS
-```
-
-Note: MAC addresses in the labels file are case-insensitive.
-
 ## Windows Hosts File Integration
 
 The `--add-hosts` feature allows you to automatically update your Windows hosts file (`C:\Windows\System32\drivers\etc\hosts`) with entries from your `labels.txt` file. Here's how it works:
 
-1. When you run `sudo arp-scan -l --add-hosts`:
+1. When you run `arp-scan --lookup --add-hosts`:
    - The tool scans your network for active hosts
    - For each discovered host, it checks if its MAC address exists in `labels.txt`
    - If a match is found and the entry has a hostname, it adds or updates an entry in the hosts file
@@ -198,25 +138,20 @@ The `--add-hosts` feature allows you to automatically update your Windows hosts 
 
 4. Use the `--dummy` option to preview changes without modifying the hosts file:
    ```bash
-   sudo arp-scan -l --add-hosts --dummy
+   arp-scan --lookup --add-hosts --dummy
    ```
    This will show you exactly what entries would be added or updated.
 
-Note: The `--add-hosts` option requires the `-l` or `--lookup` option to be enabled, as it relies on the hostnames defined in your `labels.txt` file.
+Note: The `--add-hosts` option requires the `--lookup` option to be enabled, as it relies on the hostnames defined in your `labels.txt` file.
 
-## Performance
+## Requirements
 
-- Default mode: 2-second scan duration with 10ms packet timeout
-- Fast mode: 0.5-second scan duration with 5ms packet timeout
-
-## Notes
-
-- Requires administrator/root privileges due to raw socket operations
-- Fast mode may miss slower responding hosts
-- Custom range option overrides auto-detected network range
+- Rust 1.70 or later
+- Administrator/root privileges
+- Windows (for hosts file integration) or Linux/macOS
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 
