@@ -260,8 +260,10 @@ impl ArpScanner {
         for line in file_content.lines() {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
-                existing_ips.insert(parts[0].parse::<Ipv4Addr>().unwrap());
-                existing_hostnames.insert(parts[1]);
+                if let Ok(ip) = parts[0].parse::<Ipv4Addr>() {
+                    existing_ips.insert(ip);
+                    existing_hostnames.insert(parts[1]);
+                }
             }
         }
 
@@ -269,7 +271,7 @@ impl ArpScanner {
         let mut new_entries = String::new();
         let hosts = self.discovered_hosts.lock().unwrap();
         
-        // First, collect all IPs and hostnames from labels.txt that we'll be managing
+        // First, collect all IPs and hostnames from mappings.txt that we'll be managing
         let mut managed_ips = std::collections::HashSet::new();
         let mut managed_hostnames = std::collections::HashSet::new();
         
