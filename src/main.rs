@@ -296,8 +296,11 @@ impl ArpScanner {
                     true
                 } else {
                     // Keep the line if its IP and hostname are not in our managed sets
-                    !managed_ips.contains(&parts[0].parse::<Ipv4Addr>().unwrap()) &&
-                    !managed_hostnames.contains(parts[1])
+                    if let Ok(ip) = parts[0].parse::<Ipv4Addr>() {
+                        !managed_ips.contains(&ip) && !managed_hostnames.contains(parts[1])
+                    } else {
+                        true
+                    }
                 }
             } else {
                 true
@@ -363,10 +366,13 @@ impl ArpScanner {
                         .collect::<Vec<_>>()
                         .join("\n");
 
+                    // Write the existing content first
                     std::io::Write::write_all(&mut file, normalized_content.as_bytes())?;
-                    if !normalized_content.ends_with('\n') {
+                    if !normalized_content.is_empty() && !normalized_content.ends_with('\n') {
                         std::io::Write::write_all(&mut file, b"\n")?;
                     }
+                    
+                    // Then add the new entries
                     std::io::Write::write_all(&mut file, new_entries.as_bytes())?;
                     
                     if self.options.verbose {
