@@ -34,6 +34,7 @@ cargo build --release
 # Linux/macOS (basic scanning only)
 sudo ./target/release/arp-scan
 ```
+On Windows you'll also need to install the Npcap SDK.
 
 ## Platform Support
 
