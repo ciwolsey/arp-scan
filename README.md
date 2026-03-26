@@ -17,7 +17,7 @@ A fast and efficient ARP network scanner written in Rust, primarily designed for
 
 1. Clone the repository:
 ```bash
-[git clone https://github.com/yourusername/arp-scan.git](https://github.com/ciwolsey/arp-scan.git)
+git clone https://github.com/ciwolsey/arp-scan.git
 cd arp-scan
 ```
 
