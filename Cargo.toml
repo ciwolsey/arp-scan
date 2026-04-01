@@ -1,8 +1,8 @@
 [package]
 name = "arp-scan"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["ciwolsey <carl@wolsey.org>"]
 description = "A fast ARP network scanner"
 
 [dependencies]
